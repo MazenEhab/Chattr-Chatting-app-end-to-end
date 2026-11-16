@@ -9,6 +9,13 @@ const userSchema = new mongoose.Schema({
         maxlength: 30
     },
 
+    nickname: {
+        type: String,
+        required: false,
+        minlength: 3,
+        maxlength: 30
+    },
+
     email: {
         type: String,
         required: true,
@@ -31,6 +38,22 @@ const userSchema = new mongoose.Schema({
         default: "active",
     },
 
+    readReceipts: {
+        type: Boolean,
+        default: true,
+    },
+
+    showOnlineStatus: {
+        type: Boolean,
+        default: true,
+    },
+
+    onlineStatus: {
+        type: String,
+        enum: ["online", "offline", "away", "busy", "invisible"],
+        default: "offline",
+    },
+
     lastSeen: {
         type: Date,
         default: Date.now
@@ -39,7 +62,35 @@ const userSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+
+    otps: {
+        confirmation: {
+            code: String,
+            expiresAt: Date,
+            attempts: {
+                type: Number,
+                default: 0
+            },
+            createdAt: {
+                type: Date,
+                default: Date.now
+            }
+        },
+
+        resetPassword: {
+            code: String,
+            expiresAt: Date,
+            attempts: {
+                type: Number,
+                default: 0
+            },
+            createdAt: {
+                type: Date,
+                default: Date.now
+            }
+        }
+    },
 }, {
     timestamps: true
 });

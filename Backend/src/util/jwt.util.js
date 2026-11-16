@@ -1,42 +1,45 @@
-    const jwt = require("jsonwebtoken");
-    const path = require("path");
+const jwt = require("jsonwebtoken");
+const path = require("path");
 
-    const User = require(path.join(__dirname, "..", "..", "database", "models", "user.model.js"));
-    const scret = process.env.JWT_SECRET;
+const User = require(path.join(__dirname, "..", "database", "models", "user.model.js"));
+const Blacklist = require(path.join(__dirname, "..", "database", "models", "blacklist.model.js"));
+const scret = process.env.JWT_SECRET;
 
-    const generateToken = (payload) => {
-        return jwt.sign(payload, scret, { expiresIn: process.env.JWT_EXPIRES_IN });
+const generateToken = (payload) => {
+    return jwt.sign(payload, scret, { expiresIn: process.env.JWT_EXPIRES_IN });
+}
+
+const verifyToken = async (token) => {
+    if (!token) {
+        console.log("No token provided");
+        throw new Error("Authentication required", 401)
     }
 
-    const verifyToken = async (req, res, next) => {
-        try {
-            const token = req.cookies?.chattr_access_token;
+    const blacklistedToken = await Blacklist.findOne({ token });
 
-            if (!token) {
-                return next(new Error("Authentication required", 401));
-            }
-
-            const decoded = jwt.verify(token, scret);
-
-            if (!decoded || !decoded.userId) {
-                return next(new Error("Invalid token", 401));
-            }
-
-            const user = await User.findById(decoded.userId).select("-password");
-
-            if (!user) {
-                return next(new Error("User not found", 404));
-            }
-
-            req.user = user;
-
-            next();
-        } catch (error) {
-            return next(new Error("Invalid token", 401));
-        }
+    if (blacklistedToken) {
+        throw new Error("Token is blacklisted", 401)
     }
 
-    module.exports = {
-        verifyToken,
-        generateToken
+    const decoded = jwt.verify(token, scret);
+    
+    if (!decoded || !decoded.userId) {
+        throw new Error("Invalid token", 401)
     }
+
+    const user = await User.findById(decoded.userId).select("-password");
+
+    if (!user) {
+        throw new Error("User not found", 404)
+    }
+
+    return {
+        user,
+        decoded
+    }
+}
+
+module.exports = {
+    verifyToken,
+    generateToken
+}

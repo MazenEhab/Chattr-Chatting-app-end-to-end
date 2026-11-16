@@ -8,12 +8,19 @@ const schema = {
             .min(3)
             .max(30),
 
+        nickname: joi.string()
+            .trim()
+            .max(20),
+        
+        photo: joi.string()
+            .trim(),
+
         email: joi.string()
             .required()
+            .email()
             .trim()
             .lowercase()
-            .email()
-            .max(50),
+            .max(254),
 
         password: joi.string()
             .required()

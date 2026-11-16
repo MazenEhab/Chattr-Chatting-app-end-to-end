@@ -1,7 +1,7 @@
 const error = (err, req, res, next) => {
-    const statusCode = err.statusCode || 500;
+    const statusCode = err.statusCode || 401;
     
-    res.status(statusCode).json({
+    res.status(401).json({
         status: "error",
         statusCode,
         message: err.message || "Internal Server Error"

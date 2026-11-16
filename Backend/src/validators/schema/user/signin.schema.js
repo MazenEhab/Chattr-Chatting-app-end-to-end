@@ -4,10 +4,10 @@ const schema = {
     body: joi.object({
         email: joi.string()
             .required()
+            .email()
             .trim()
             .lowercase()
-            .email()
-            .max(50),
+            .max(254),
 
         password: joi.string()
             .required()
