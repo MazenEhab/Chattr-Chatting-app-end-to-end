@@ -1,10 +1,8 @@
 const bcrypt = require("bcryptjs");
 const nanoid = require("nanoid");
-const path = require("path");
-
-const jwtUtil = require(path.join(__dirname, "..", "..", "util", "jwt.util.js"));
-const User = require(path.join(__dirname, "..", "..", "database", "models", "user.model.js"));
-const Blacklist = require(path.join(__dirname, "..", "..", "database", "models", "blacklist.model.js"));
+const jwtUtil = require("../../util/jwt.util.js");
+const User = require("../../database/models/user.model.js");
+const Blacklist = require("../../database/models/blacklist.model.js");
 
 const authMe = async ({ userId }) => {
     const user = await User.findById(userId).select("-password").select("-otps")
@@ -34,7 +32,6 @@ const authMe = async ({ userId }) => {
             lastSeen: user.showOnlineStatus,
             receipts: user.readReceipts,
             email: user.email,
-            photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUw7yz0WHmZ5vrO8S7t7VqvpVArTAf5fahbCofT_FQiw&s=10",
         },
 
         userObject: user
@@ -79,7 +76,7 @@ const logout = async ({ token, expiresAt }) => {
     });
 }
 
-const resetPassword = async ({ email }) => {
+const forgetPassword = async ({ email }) => {
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -102,6 +99,80 @@ const resetPassword = async ({ email }) => {
         code: hashedOtp,
         expiresAt: new Date(Date.now() + minutes * 60 * 1000),
         attempts: 0,
+    }
+
+    await user.save();
+
+    return {
+        user: {
+            userId: user._id,
+            username: user.username,
+            email: user.email,
+        },
+
+        otp: {
+            code: otp,
+            expiresAt: minutes
+        }
+    }
+}
+
+const resetPassword = async ({ userId, password }) => {
+    const user = await User.findById(userId);
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    if (!user.isEmailVerified) {
+        throw new Error("Please verify your email");
+    }
+
+    if (user.accountStatus === "suspended") {
+        throw new Error("Account suspended");
+    }
+    
+    user.password = await bcrypt.hash(password, 12);
+
+    await user.save();
+
+    return {
+        user: {
+            userId: user._id,
+            username: user.username,
+            email: user.email,
+        }
+    }
+}
+
+const resendOtp = async ({ email, purpose }) => {
+    console.log("Resend OTP called with email:", email, "and purpose:", purpose);
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    if (user.accountStatus === "suspended") {
+        throw new Error("Account suspended");
+    }
+
+    const otp = nanoid.nanoid(6);
+    const hashedOtp = await bcrypt.hash(otp, 12);
+    const minutes = 10;
+
+    if (purpose === "email-verification") {
+        user.otps.confirmation = {
+            code: hashedOtp,
+            expiresAt: new Date(Date.now() + minutes * 60 * 1000),
+            attempts: 0,
+        };
+    } else if (purpose === "password-reset") {
+        user.otps.resetPassword = {
+            code: hashedOtp,
+            expiresAt: new Date(Date.now() + minutes * 60 * 1000),
+            attempts: 0,
+        };
     }
 
     await user.save();
@@ -168,7 +239,6 @@ const signUp = async ({ username, email, password, nickname }) => {
 }
 
 const signIn = async ({ email, password }) => {
-    console.log(email.toLowerCase())
     const user = await User.findOne({ email: email.toLowerCase() });
 
     if (!user) {
@@ -181,7 +251,10 @@ const signIn = async ({ email, password }) => {
         throw new Error("Invalid password.");
     }
 
-    const accessToken = jwtUtil.generateToken({ userId: user._id });
+    const accessToken = jwtUtil.generateToken({
+         userId: user._id,
+        purpose: "auth"
+        });
 
     if (!user.isEmailVerified) {
         const otp = nanoid.nanoid(6);
@@ -234,7 +307,9 @@ module.exports = {
     authMe,
     updateProfile,
     logout,
+    forgetPassword,
     resetPassword,
+    resendOtp,
     signIn,
     signUp
 }

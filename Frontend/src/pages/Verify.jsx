@@ -24,11 +24,13 @@ export default function Verify() {
   async function submit(code) {
     setErr("")
     setBusy(true)
-    try {
+    try { 
       if (code.length < 6) throw new Error("Enter all 6 characters.")
-      const r = await api("/otp/verify", { email: s.email, otp: code })
-      if (s.mode === "reset") {
-        s.update({ token: r.token })
+      const purpose = s.mode === "reset" ? "password-reset" : "email-verification"
+      const r = await api("/otp/verify", { email: s.email, otp: code, purpose })
+      if (purpose === "password-reset") {
+        if (!r.resetToken) throw new Error("The server did not return a password reset token.")
+        s.update({ token: r.resetToken })
         return nav("/reset")
       }
       s.update({ user: r.user })
@@ -60,7 +62,8 @@ export default function Verify() {
   }
 
   async function resend() {
-    await api("/auth/resend", { email: s.email, mode: s.mode })
+    const purpose = s.mode === "reset" ? "password-reset" : "email-verification"
+    await api("/auth/resend", { email: s.email, purpose })
     setLeft(30)
   }
 

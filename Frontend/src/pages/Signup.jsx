@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import AuthShell from "../components/AuthShell"
 import { Field, Form, PasswordField } from "../components/Form"
 import PhotoPicker from "../components/PhotoPicker"
+import { At, Mail, User } from "../components/Icons"
 import { api } from "../lib/api"
 import { validEmail } from "../lib/format"
 import { useSession } from "../lib/session"
@@ -30,11 +31,11 @@ export default function Signup() {
     >
       <Form onSubmit={submit} label="Create account">
         <PhotoPicker className="pic flat" value={photo} label="+" onChange={setPhoto} />
-        <Field id="nick" label="Nickname" placeholder="Optional — defaults to your username" maxLength={30} autoComplete="nickname" />
+        <Field id="nick" label="Nickname" icon={User} placeholder="Optional — defaults to your username" maxLength={30} autoComplete="nickname" />
         <p className="hint">What people see in chats. Leave it empty to use your username.</p>
-        <Field id="username" label="Username" autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={20} />
+        <Field id="username" label="Username" icon={At} autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={20} />
         <p className="hint">Letters, numbers and underscores. People use it to find you.</p>
-        <Field id="email" label="Email" type="email" autoComplete="email" />
+        <Field id="email" label="Email" type="email" icon={Mail} autoComplete="email" />
         <PasswordField id="password" label="Password" autoComplete="new-password" />
         <p className="hint">Use at least 8 characters.</p>
       </Form>

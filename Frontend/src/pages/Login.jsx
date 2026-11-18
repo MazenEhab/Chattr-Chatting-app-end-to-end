@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import AuthShell from "../components/AuthShell"
 import { Field, Form, PasswordField } from "../components/Form"
+import { Mail } from "../components/Icons"
 import { api, MOCK } from "../lib/api"
 import { validEmail } from "../lib/format"
 import { fetchCurrentUser } from "../lib/profile"
@@ -41,7 +42,7 @@ export default function Login() {
       foot={<>New to Chattr? <Link className="link" to="/signup">Create an account</Link> · <Link className="link" to="/api-docs">API docs</Link></>}
     >
       <Form onSubmit={submit} label="Log in">
-        <Field id="email" label="Email" type="email" autoComplete="email" />
+        <Field id="email" label="Email" type="email" icon={Mail} autoComplete="email" />
         <PasswordField id="password" label="Password" autoComplete="current-password" />
         <Link className="link end" to="/forgot">Forgot password?</Link>
       </Form>

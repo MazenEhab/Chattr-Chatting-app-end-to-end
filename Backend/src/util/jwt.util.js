@@ -1,8 +1,6 @@
 const jwt = require("jsonwebtoken");
-const path = require("path");
-
-const User = require(path.join(__dirname, "..", "database", "models", "user.model.js"));
-const Blacklist = require(path.join(__dirname, "..", "database", "models", "blacklist.model.js"));
+const User = require("../database/models/user.model.js");
+const Blacklist = require("../database/models/blacklist.model.js");
 const scret = process.env.JWT_SECRET;
 
 const generateToken = (payload) => {

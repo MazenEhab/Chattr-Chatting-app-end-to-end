@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom"
 import AuthShell from "../components/AuthShell"
 import { Field, Form } from "../components/Form"
+import { Mail } from "../components/Icons"
 import { api } from "../lib/api"
 import { validEmail } from "../lib/format"
 import { useSession } from "../lib/session"
@@ -11,7 +12,7 @@ export default function Forgot() {
 
   async function submit(d) {
     if (!validEmail(d.email)) throw new Error("Enter a valid email address.")
-    await api("/auth/forgot", { email: d.email })
+    await api("/auth/forget", { email: d.email })
     s.update({ email: d.email, mode: "reset" })
     nav("/verify")
   }
@@ -24,7 +25,7 @@ export default function Forgot() {
       foot={<Link className="link" to="/login">Back to log in</Link>}
     >
       <Form onSubmit={submit} label="Send code">
-        <Field id="email" label="Email" type="email" autoComplete="email" />
+        <Field id="email" label="Email" type="email" icon={Mail} autoComplete="email" />
       </Form>
     </AuthShell>
   )

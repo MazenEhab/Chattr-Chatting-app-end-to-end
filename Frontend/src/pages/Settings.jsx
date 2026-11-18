@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Field, Form } from "../components/Form"
 import PhotoPicker from "../components/PhotoPicker"
+import { User } from "../components/Icons"
 import { api } from "../lib/api"
 import { useSession } from "../lib/session"
 import { displayName, fetchCurrentUser, normalizePerson } from "../lib/profile"
@@ -79,7 +80,7 @@ async function submit(d) {
             <PhotoPicker className="pic" value={photo} label={nick || displayName(u)} onChange={setPhoto} />
             <h1>Your profile</h1>
             <p className="sub">Choose how you appear to the people you chat with.</p>
-            <Field id="nick" label="Nickname" maxLength={20} value={nick} onChange={e => setNick(e.target.value)} />
+            <Field id="nick" label="Nickname" icon={User} maxLength={20} value={nick} onChange={e => setNick(e.target.value)} />
             <p className="hint">Your username is @{u.username}. People use it to find you.</p>
             <label className="switch"><span>Show my last seen</span><input type="checkbox" name="lastSeen" checked={showLastSeen} onChange={e => setShowLastSeen(e.target.checked)} /></label>
             <label className="switch"><span>Send read receipts</span><input type="checkbox" name="receipts" checked={sendReceipts} onChange={e => setSendReceipts(e.target.checked)} /></label>

@@ -124,6 +124,18 @@ async function mock(path, body) {
     const msgs = all.slice(-Number(page[2]))
     return { messages: msgs, more: all.length > msgs.length }
   }
+  if (path === "/ai/chat") {
+    const last = body.messages.at(-1)
+    if ((last.text || "").includes("#fail")) throw new Error("Gemini is busy right now. Try again in a moment.")
+    const names = (last.attachments || []).map(a => "`" + a.name + "`")
+    await wait(900)
+    return {
+      text:
+        "**Demo mode.** I’m standing in for Gemini, so this reply is canned.\n\n" +
+        (names.length ? `I can see ${names.join(", ")}.\n\n` : "") +
+        "Once your backend is connected I can:\n\n- Answer questions and explain things\n- Read images, PDFs and text files\n- Write and fix code\n\n```js\nconsole.log(\"Hello from Gemini\")\n```\n\nYou asked: " + (last.text || "(only attachments)")
+    }
+  }
   if (path === "/messages") {
     if (body.text.includes("#fail")) throw new Error("Network error")
     return { id: Date.now(), at: Date.now(), status: "sent" }

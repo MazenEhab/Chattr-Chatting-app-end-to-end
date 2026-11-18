@@ -1,8 +1,8 @@
-const path = require("path");
-
 module.exports = {
-    signupSchema: require(path.join(__dirname, "signup.schema.js")),
-    signinSchema: require(path.join(__dirname, "signin.schema.js")),
-    updateSchema: require(path.join(__dirname, "update.schema.js")),
-    resetPasswordSchema: require(path.join(__dirname, "resetpassword.schema.js"))
+    signup: require("./signup.schema.js"),
+    signin: require("./signin.schema.js"),
+    update: require("./update.schema.js"),
+    forgetPassword: require("./forget.schema.js"),
+    resetPassword: require("./reset.schema.js"),
+    resend: require("./resend.schema.js")
 }

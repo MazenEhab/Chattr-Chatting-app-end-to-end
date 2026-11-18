@@ -1,10 +1,8 @@
 require("dotenv").config();
-const path = require("path");
-
-const app = require(path.join(__dirname, "app.js"));
+const app = require("./app.js");
 const PORT = process.env.PORT;
 
-const connectDB = require(path.join(__dirname, "database", "connection.database.js"));
+const connectDB = require("./database/connection.database.js");
 
 const startServer = () => {
     try {

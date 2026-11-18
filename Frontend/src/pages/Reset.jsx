@@ -17,7 +17,7 @@ export default function Reset() {
   async function submit(d) {
     if (d.password.length < 8) throw new Error("Your password needs at least 8 characters.")
     if (d.password !== d.confirm) throw new Error("The two passwords don’t match.")
-    await api("/auth/reset", { email: s.email, token: s.token, password: d.password })
+    await api("/auth/reset-password", { token: s.token, password: d.password })
     s.update({ token: "", mode: "", notice: "Password updated. Log in with your new password." })
     nav("/login")
   }

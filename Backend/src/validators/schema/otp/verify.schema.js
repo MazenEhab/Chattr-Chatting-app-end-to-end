@@ -5,15 +5,18 @@ const schema = {
         otp: joi.string()
             .required()
             .trim()
-            .min(6)
-            .max(6),
+            .length(6),
 
         email: joi.string()
             .required()
             .email()
             .trim()
             .lowercase()
-            .max(50)
+            .max(50),
+
+        purpose: joi.string()
+            .required()
+            .valid("email-verification", "password-reset"),
     })
 }
 

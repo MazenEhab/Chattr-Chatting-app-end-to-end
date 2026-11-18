@@ -1,31 +1,42 @@
-const path = require("path");
+const service = require("./otp.service.js");
+const emailService = require("../email/email.service.js");
 
-const service = require(path.join(__dirname, "otp.service.js"));
-const emailService = require(path.join(__dirname, "..", "email", "email.service.js"));
-
-const verifyAccount = async (req, res, next) => {
+const verifyOtp = async (req, res, next) => {
     try {
-        const email = req.body.email;
-        const otp = req.body.otp;
-        
-        const {user, result} = await service.verifyAccount({email, otp});
+        const result = await service(req.body);
 
-        await emailService.sendEmail({to: user.email, subject: "Welcome to chattr", template: "welcome", data: {
-            name: user.username,
-            username: user.username,
-            email: user.email,
-        }});
+        if (!result) {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid or expired verification code.",
+            });
+        }
 
-        res.status(200).json({
+        if (req.body.purpose === "email-verification") {
+            await emailService.sendEmail({
+                to: result.user.email, subject: "Welcome to chattr", template: "welcome", data: {
+                    name: result.user.username,
+                    username: result.user.username,
+                    email: result.user.email,
+                }
+            });
+        }
+
+        const response = {
             status: "success",
-            message: "Account verified successfully",
-            data: result
-        });
+            message: "Verification successful.",
+        };
+
+        if (req.body.purpose === "password-reset") {
+            response.resetToken = result;
+        } else {
+            response.user = result.user;
+        }
+
+        return res.status(200).json(response);
     } catch (error) {
         next(error);
     }
 }
 
-module.exports = {
-    verifyAccount
-}
+module.exports = verifyOtp;

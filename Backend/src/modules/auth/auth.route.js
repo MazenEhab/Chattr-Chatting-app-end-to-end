@@ -1,25 +1,29 @@
-const path = require("path");
 const express = require("express");
 
-const controller = require(path.join(__dirname, "auth.controller.js"));
-const validationMiddleware = require(path.join(__dirname, "..", "..", "middleware", "validation.middleware.js"))
-const authorizationMiddleware = require(path.join(__dirname, "..", "..", "middleware", "Authorization.middleware.js"))
+const controller = require("./auth.controller.js");
 
-const signupSchema = require(path.join(__dirname, "..", "..", "validators", "schema", "user","signup.schema.js"))
-const signinSchema = require(path.join(__dirname, "..", "..", "validators", "schema", "user","signin.schema.js"))
-const updateSchema = require(path.join(__dirname, "..", "..", "validators", "schema", "user","update.schema.js"))
-const resetPasswordSchema = require(path.join(__dirname, "..", "..", "validators", "schema", "user","resetpassword.schema.js"))
+const schemaIndex = require("../../validators/schema/user/index.js");
+const middlewareIndex = require("../../middleware/index.js");
 
 const router = express.Router();
 
-router.get("/me", authorizationMiddleware.TokenAuthorization, controller.authMe)
-.patch("/me", validationMiddleware(updateSchema),
-        authorizationMiddleware.TokenAuthorization,
-        controller.updateProfile
-    );
-router.post("/reset-password", validationMiddleware(resetPasswordSchema), controller.resetPassword);
-router.post("/logout", authorizationMiddleware.TokenAuthorization, controller.logout);
-router.post("/signup", validationMiddleware(signupSchema), controller.signUp);
-router.post("/login", validationMiddleware(signinSchema), controller.signIn);
+router.get("/me", middlewareIndex.authorizationMiddleware.TokenAuthorization, controller.authMe)
+router.patch(
+    "/me",
+    middlewareIndex.authorizationMiddleware.TokenAuthorization,
+    middlewareIndex.validationMiddleware(schemaIndex.update),
+    controller.updateProfile
+);
+router.post("/forget", middlewareIndex.validationMiddleware(schemaIndex.forgetPassword), controller.forgetPassword);
+router.post(
+    "/reset-password",
+    middlewareIndex.validationMiddleware(schemaIndex.resetPassword),
+    middlewareIndex.authorizationMiddleware.resetPasswordToken,
+    controller.resetPassword
+);
+router.post("/resend", middlewareIndex.debugMiddleware, middlewareIndex.validationMiddleware(schemaIndex.resend), controller.resendOtp);
+router.post("/logout", middlewareIndex.authorizationMiddleware.TokenAuthorization, controller.logout);
+router.post("/signup", middlewareIndex.validationMiddleware(schemaIndex.signup), controller.signUp);
+router.post("/login", middlewareIndex.validationMiddleware(schemaIndex.signin), controller.signIn);
 
 module.exports = router;

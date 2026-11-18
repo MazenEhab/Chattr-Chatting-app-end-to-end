@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import Avatar from "./Avatar"
 import Tick from "./Tick"
-import { Back, MuteIcon, Send } from "./Icons"
+import { Back, Info, MuteIcon, Send } from "./Icons"
 import { dayKey, dayLabel, time } from "../lib/format"
 import { isMuted, presence, presenceClass } from "../lib/chat"
 import { displayName } from "../lib/profile"
@@ -91,12 +91,14 @@ export default function Thread({ c, onBack, onInfo, onSend, onRetry, onLoadOlder
     }
     items.push(
       <div className={`m ${m.from}${m.status === "sending" ? " sending" : ""}`} key={m.id}>
-        <p>{m.text}</p>
-        <span className="meta">
-          <time>{time(m.at)}</time>
-          {m.from === "me" && <Tick s={m.status} />}
-          {m.status === "failed" && <button className="retry" onClick={() => onRetry(m)}>Tap to retry</button>}
-        </span>
+        <p>
+          {m.text}
+          <span className="meta">
+            <time>{time(m.at)}</time>
+            {m.from === "me" && <Tick s={m.status} />}
+            {m.status === "failed" && <button className="retry" onClick={() => onRetry(m)}>Tap to retry</button>}
+          </span>
+        </p>
       </div>
     )
   }
@@ -113,6 +115,7 @@ export default function Thread({ c, onBack, onInfo, onSend, onRetry, onLoadOlder
             <small className={presenceClass(c)}>{presence(c)}</small>
           </div>
         </button>
+        <button className="ghost icon" onClick={onInfo} aria-label="Contact info"><Info /></button>
       </header>
       <div className="msgs" ref={box} onScroll={scroll} tabIndex={0}>
         {!c.loaded ? skeleton(5) : (

@@ -1,13 +1,11 @@
 const ejs = require("ejs");
-const path = require("path");
-
-const transporter = require(path.join(__dirname, "..", "..", "config", "email.config.js"));
+const transporter = require("../../config/email.config.js");
 
 const templates = {
-    verification: path.join(__dirname, "templates", "verification.ejs"),
-    passwordReset: path.join(__dirname, "templates", "reset-password.ejs"),
-    passwordChanged: path.join(__dirname, "templates", "password-changed.ejs"),
-    welcome: path.join(__dirname, "templates", "welcome.ejs")
+    verification: `${__dirname}/templates/verification.ejs`,
+    passwordReset: `${__dirname}/templates/reset-password.ejs`,
+    passwordChanged: `${__dirname}/templates/password-changed.ejs`,
+    welcome: `${__dirname}/templates/welcome.ejs`
 };
 
 const sendEmail = async ({ to, subject, template, data }) => {
@@ -34,12 +32,12 @@ const sendEmail = async ({ to, subject, template, data }) => {
         html,
         attachments: [ {
             filename: "logo.png",
-            path: path.join(__dirname, "assets", "logo.png"),
+            path: `${__dirname}/assets/logo.png`,
             cid: "chattr-logo"
         },
         {
             filename: "pattern.png",
-            path: path.join(__dirname, "assets", "pattern.png"),
+            path: `${__dirname}/assets/pattern.png`,
             cid: "chattr-pattern"
         }]
     });

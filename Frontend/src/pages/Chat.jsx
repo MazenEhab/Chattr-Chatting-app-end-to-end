@@ -8,10 +8,12 @@ import { isMuted, muteMs } from "../lib/chat"
 import Avatar from "../components/Avatar"
 import Tick from "../components/Tick"
 import Thread from "../components/Thread"
+import AiThread, { AiRow } from "../components/AiThread"
+import { AI_ID, useAiChat } from "../lib/ai"
 import ContactInfo from "../components/ContactInfo"
 import ContextMenu from "../components/ContextMenu"
 import Confirm from "../components/Confirm"
-import { MuteIcon, Pin } from "../components/Icons"
+import { Lock, MuteIcon, Pin, Search } from "../components/Icons"
 
 const replies = ["Haha, exactly 😄", "Give me five minutes", "Sounds good to me", "Wait, really? Tell me more", "On my way ✨", "Let’s do it 👍"]
 
@@ -91,6 +93,7 @@ export default function Chat() {
   const [filter, setFilter] = useState("all")
   const [people, setPeople] = useState([])
   const [searching, setSearching] = useState(false)
+  const ai = useAiChat(user.id ?? user.username)
   const ref = useRef([])
   const activeRef = useRef(null)
   ref.current = chats || []
@@ -99,6 +102,8 @@ export default function Chat() {
   const find = id => ref.current.find(c => c.id === id)
   const closeMenu = useCallback(() => setMenu(null), [])
   const term = q.trim().toLowerCase().replace(/^@/, "")
+  const aiOpen = activeId === AI_ID
+  const showAi = filter === "all" && (!term || "gemini ai assistant".includes(term))
 
   const patch = (id, change) =>
     setChats(cs => cs.map(c => (c.id === id ? { ...c, ...(typeof change === "function" ? change(c) : change) } : c)))
@@ -236,6 +241,7 @@ export default function Chat() {
   function confirmed() {
     const { kind, id } = confirm
     setConfirm(null)
+    if (id === AI_ID) return ai.clear()
     if (kind === "delete") remove(id)
     else if (kind === "clear") clear(id)
     else block(id, true)
@@ -258,7 +264,7 @@ export default function Chat() {
   }
 
   const menuChat = menu && find(menu.id)
-  const confirmChat = confirm && find(confirm.id)
+  const confirmChat = confirm && (confirm.id === AI_ID ? { id: AI_ID, nickname: "Gemini" } : find(confirm.id))
 
   return (
     <div className="chat" data-view={view}>
@@ -280,6 +286,7 @@ export default function Chat() {
         </div>
         <label className="search">
           <span className="sr">Search chats or find people by username</span>
+          <Search />
           <input type="search" placeholder="Search chats or find @username" autoComplete="off" value={q} onChange={e => setQ(e.target.value)} />
         </label>
         <div className="chips">
@@ -288,6 +295,7 @@ export default function Chat() {
           ))}
         </div>
         <ul className="list" aria-busy={!chats}>
+          {showAi && <AiRow ai={ai} on={aiOpen} onOpen={() => open(AI_ID)} />}
           {!chats && <SkRows n={7} />}
           {rows.map(c => (
             <ChatRow key={c.id} c={c} on={c.id === activeId} onOpen={() => open(c.id)} onInfo={() => { open(c.id); setInfo(true) }} onMenu={(x, y) => setMenu({ x, y, id: c.id })} />
@@ -309,7 +317,9 @@ export default function Chat() {
           {chats && !term && !rows.length && <li className="none">{filter === "unread" ? "You’re all caught up." : "No conversations yet. Search a @username to start one."}</li>}
         </ul>
       </aside>
-      {active ? (
+      {aiOpen ? (
+        <AiThread key={AI_ID} ai={ai} onBack={() => setView("list")} onClear={() => setConfirm({ kind: "clear", id: AI_ID })} />
+      ) : active ? (
         <Thread
           key={active.id}
           c={active}
@@ -328,6 +338,7 @@ export default function Chat() {
             <img src="/logo.png" alt="" />
             <h2>Your conversations</h2>
             <p>Select a chat to read it, or search a @username to start a new one.</p>
+            <small className="lockline"><Lock /> Private one-to-one chats</small>
           </div>
         </section>
       )}

@@ -1,27 +1,41 @@
 const bcrypt = require("bcryptjs");
-const path = require("path");
+const User = require("../../database/models/user.model.js");
+const jwtUtil = require("../../util/jwt.util.js");
 
-const User = require(path.join(__dirname, "..", "..", "database", "models", "user.model.js"));
+const verifyOtp = async ({ email, otp, purpose }) => {
+    switch (purpose) {
+        case "email-verification":
+            return await verifyAccount({ email, otp });
+        case "password-reset":
+            return await verifyForget({ email, otp });
+        default:
+            return null;
+    }
+}
 
 const verifyAccount = async ({email, otp}) => {
     const user = await User.findOne({email}).select("-password");
 
     if (!user) {
-        throw new Error ("Account was not found");
+        return null;
     }
 
     if (user.isEmailVerified) {
-        throw new Error ("Email is already verified");
+        return null;
     }
 
     const confirmationOtp = user.otps?.confirmation
 
     if (!confirmationOtp?.code || !confirmationOtp?.expiresAt) {
-        throw new Error("No verification OTP found. Please request a new one.");
+        return null;
     }
 
     if (confirmationOtp?.attempts >= 5) {
-        throw new Error("Too many attempts. Request a new OTP.");
+        return null;
+    }
+
+    if (Date.now() > user.otps.confirmation.expiresAt.getTime()) {
+        return null;
     }
 
     const otpMatched = await bcrypt.compare(otp, user.otps.confirmation.code);
@@ -31,10 +45,6 @@ const verifyAccount = async ({email, otp}) => {
         await user.save();
 
         throw new Error ("In valid otp");
-    }
-
-    if (Date.now() > user.otps.confirmation.expiresAt.getTime()) {
-        throw new Error ("Otp expired")
     }
 
     user.isEmailVerified = true;
@@ -52,6 +62,51 @@ const verifyAccount = async ({email, otp}) => {
     }
 }
 
-module.exports = {
-    verifyAccount
+const verifyForget = async ({email, otp}) => {
+    const user = await User.findOne({email});
+
+    if (!user || !user.isEmailVerified) {
+        return null;
+    }
+
+    if (user.accountStatus === "suspended") {
+        return null;
+    }
+
+    const forgetOtp = user.otps?.resetPassword
+
+    if (!forgetOtp?.code || !forgetOtp?.expiresAt) {
+        return null;
+    }
+
+    if (Date.now() > user.otps.resetPassword.expiresAt.getTime()) {
+        return null;
+    }
+    
+    if (user.otps.resetPassword.attempts >= 5) {
+        return null;
+    }
+
+    const otpMatched = await bcrypt.compare(otp, user.otps.resetPassword.code);
+
+    if (!otpMatched) {
+        user.otps.resetPassword.attempts += 1;
+        await user.save();
+        return null;
+    }
+
+    const token = jwtUtil.generateToken(
+        { 
+            userId: user._id,
+            purpose: "password-reset"
+         },
+        { expiresIn: "15m" }
+        );
+    user.otps.resetPassword = null;
+    
+    await user.save();
+
+    return token
 }
+
+module.exports = verifyOtp

@@ -1,8 +1,6 @@
 const { sign } = require("crypto");
-const path = require("path");
-
-const authService = require(path.join(__dirname, "auth.service.js"));
-const emailService = require(path.join(__dirname, "..", "email", "email.service.js"));
+const authService = require("./auth.service.js");
+const emailService = require("../email/email.service.js");
 
 const authMe = async (req, res, next) => {
     try {
@@ -59,9 +57,9 @@ const logout = async (req, res, next) => {
     }
 }
 
-const resetPassword = async (req, res, next) => {
+const forgetPassword = async (req, res, next) => {
     try {
-        const result = await authService.resetPassword(req.body);
+        const result = await authService.forgetPassword(req.body);
 
         if (result) {
             try {
@@ -87,6 +85,58 @@ const resetPassword = async (req, res, next) => {
     }
 }
 
+const resetPassword = async (req, res, next) => {
+    try {
+        const { user } = await authService.resetPassword({
+            userId: req.decoded.userId,
+            password: req.body.password
+        });
+
+        return res.status(200).json({
+            status: "success",
+            message: "Password reset successfully",
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+const resendOtp = async (req, res, next) => {
+    try {
+        const { email, purpose } = req.body;
+
+        const result = await authService.resendOtp({
+            email,
+            purpose
+        });
+
+        const isEmailVerification = purpose === "email-verification";
+
+        await emailService.sendEmail({
+            to: result.user.email,
+            subject: isEmailVerification
+                ? "Verify Your Email"
+                : "Password Reset",
+            template: isEmailVerification
+                ? "emailVerification"
+                : "passwordReset",
+            data: {
+                name: result.user.username,
+                email: result.user.email,
+                code: result.otp.code,
+                minutes: result.otp.expiresAt
+            }
+        });
+
+        return res.status(200).json({
+            status: "success",
+            message: "OTP sent successfully"
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
 const signUp = async (req, res, next) => {
     try {
         const { user, otp } = await authService.signUp(req.body);
@@ -156,7 +206,9 @@ module.exports = {
     authMe,
     updateProfile,
     logout,
+    forgetPassword,
     resetPassword,
+    resendOtp,
     signUp,
     signIn,
 };

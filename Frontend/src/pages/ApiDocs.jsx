@@ -33,6 +33,8 @@ const pages = [
     ["POST", "/chats/unread", "{ chatId, unread }", "200 {}", "Mark as unread or read."],
     ["POST", "/chats/clear", "{ chatId }", "200 {}", "Deletes the messages for this user only."],
     ["DELETE", "/chats/:id", "", "200 {}", "Removes the chat for this user only."]]],
+  ["Gemini AI chat", "/chat", [
+    ["POST", "/ai/chat", "{ messages: [{ role: \"user\" | \"model\", text, attachments?: [{ name, mime, data?, content? }] }] }", "{ text }", "Calls Gemini with the GEMINI_API_KEY that lives only on the server. messages is the recent conversation, oldest first; only the last message carries attachments. data is base64 (images and PDFs), content is plain text (text and code files). text is Markdown. Require the session, rate limit it, and return 4xx or 5xx with { message } on failure."]]],
   ["Real time (Socket.IO, not wired yet)", "/chat", [
     ["EVENT", "message:new", "", "{ chatId, message }", "An incoming message."],
     ["EVENT", "message:status", "", "{ chatId, id, status }", "delivered or seen for a message you sent."],
